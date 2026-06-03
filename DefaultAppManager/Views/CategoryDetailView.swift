@@ -65,9 +65,12 @@ struct FileTypeAssignmentRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(fileType.displayName)
                     .font(.body)
-                Text(([fileType.primaryExtension] + [fileType.utiIdentifier]).joined(separator: "  "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(fileType.primaryExtension)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    CopyableBundleIdentifierText(bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
+                }
             }
 
             Spacer(minLength: 20)

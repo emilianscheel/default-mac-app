@@ -30,9 +30,12 @@ struct AppDetailView: View {
                     ForEach(assignedFileTypes) { fileType in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(fileType.displayName)
-                            Text("\(fileType.primaryExtension)  \(fileType.utiIdentifier)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                Text(fileType.primaryExtension)
+                                    .font(.system(.caption, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                                CopyableBundleIdentifierText(bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
+                            }
                         }
                         .padding(.vertical, 4)
                         .padding(.leading, 6)
