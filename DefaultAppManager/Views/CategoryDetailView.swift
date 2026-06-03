@@ -31,25 +31,27 @@ struct CategoryDetailView: View {
                 Text(category.name)
                     .font(.title2.weight(.semibold))
                 Text("\(category.fileTypes.count) file types")
-                    .font(.subheadline)
+                    .font(.system(.subheadline, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Menu {
-                ForEach(store.apps) { app in
-                    Button {
-                        store.setDefault(app: app, for: category)
-                    } label: {
-                        AppMenuLabel(app: app, isSelected: false)
+            AppChoiceMenu(
+                title: "Set All",
+                options: store.apps,
+                emptyTitle: "No registered apps",
+                isSelected: { app in
+                    category.fileTypes.allSatisfy { fileType in
+                        store.currentHandlers[fileType.id] == app.bundleIdentifier
                     }
+                },
+                select: { app in
+                    store.setDefault(app: app, for: category)
                 }
-            } label: {
-                Text("Set All")
-                    .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
-            }
-            .menuStyle(.borderlessButton)
+            )
+            .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
+            .frame(height: 22)
             .fixedSize(horizontal: true, vertical: false)
             .help("Set the default opening app for every file type in \(category.name)")
         }
@@ -85,62 +87,135 @@ struct AppPickerMenu: View {
     let fileType: FileType
 
     var body: some View {
-        Menu {
-            let options = store.appOptions(for: fileType)
-            if options.isEmpty {
-                Text("No registered apps")
-            } else {
-                ForEach(options) { app in
-                    Button {
-                        store.setDefault(app: app, for: fileType)
-                    } label: {
-                        AppMenuLabel(app: app, isSelected: store.currentHandlers[fileType.id] == app.bundleIdentifier)
-                    }
-                }
+        AppChoiceMenu(
+            title: store.currentAppName(for: fileType),
+            options: store.appOptions(for: fileType),
+            emptyTitle: "No registered apps",
+            isSelected: { app in
+                store.currentHandlers[fileType.id] == app.bundleIdentifier
+            },
+            select: { app in
+                store.setDefault(app: app, for: fileType)
             }
-        } label: {
-            Text(store.currentAppName(for: fileType))
-                .lineLimit(1)
-                .truncationMode(.tail)
-            .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
-        }
-        .menuStyle(.borderlessButton)
+        )
+        .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
+        .frame(height: 22)
         .fixedSize(horizontal: true, vertical: false)
         .help("Choose the default app for \(fileType.displayName)")
     }
 }
 
-struct AppMenuLabel: View {
-    let app: InstalledApp
-    let isSelected: Bool
+struct AppChoiceMenu: NSViewRepresentable {
+    let title: String
+    let options: [InstalledApp]
+    let emptyTitle: String
+    let isSelected: (InstalledApp) -> Bool
+    let select: (InstalledApp) -> Void
 
-    var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "checkmark")
-                .opacity(isSelected ? 1 : 0)
-                .frame(width: 14)
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            title: title,
+            options: options,
+            emptyTitle: emptyTitle,
+            isSelected: isSelected,
+            select: select
+        )
+    }
 
-            AppIconImage(app: app, size: 16)
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton(title: title, target: context.coordinator, action: #selector(Coordinator.showMenu(_:)))
+        button.isBordered = false
+        button.alignment = .right
+        button.controlSize = .regular
+        button.image = AppMenuIcon.dropdownIndicator
+        button.imagePosition = .imageTrailing
+        button.imageHugsTitle = true
+        button.imageScaling = .scaleNone
+        button.lineBreakMode = .byTruncatingTail
+        button.setButtonType(.momentaryPushIn)
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        context.coordinator.button = button
+        return button
+    }
 
-            Text(app.name)
+    func updateNSView(_ button: NSButton, context: Context) {
+        button.title = title
+        context.coordinator.title = title
+        context.coordinator.options = options
+        context.coordinator.emptyTitle = emptyTitle
+        context.coordinator.isSelected = isSelected
+        context.coordinator.select = select
+        context.coordinator.button = button
+    }
+
+    final class Coordinator: NSObject {
+        var title: String
+        var options: [InstalledApp]
+        var emptyTitle: String
+        var isSelected: (InstalledApp) -> Bool
+        var select: (InstalledApp) -> Void
+        weak var button: NSButton?
+
+        init(
+            title: String,
+            options: [InstalledApp],
+            emptyTitle: String,
+            isSelected: @escaping (InstalledApp) -> Bool,
+            select: @escaping (InstalledApp) -> Void
+        ) {
+            self.title = title
+            self.options = options
+            self.emptyTitle = emptyTitle
+            self.isSelected = isSelected
+            self.select = select
+        }
+
+        @objc func showMenu(_ sender: NSButton) {
+            let menu = NSMenu(title: title)
+            menu.autoenablesItems = false
+            menu.showsStateColumn = true
+
+            if options.isEmpty {
+                let item = NSMenuItem(title: emptyTitle, action: nil, keyEquivalent: "")
+                item.isEnabled = false
+                menu.addItem(item)
+            } else {
+                for app in options {
+                    let item = NSMenuItem(title: app.name, action: #selector(selectApp(_:)), keyEquivalent: "")
+                    item.target = self
+                    item.representedObject = app.bundleIdentifier
+                    item.image = AppMenuIcon.image(for: app)
+                    item.state = isSelected(app) ? .on : .off
+                    menu.addItem(item)
+                }
+            }
+
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
+        }
+
+        @objc private func selectApp(_ sender: NSMenuItem) {
+            guard let bundleIdentifier = sender.representedObject as? String,
+                  let app = options.first(where: { $0.bundleIdentifier == bundleIdentifier }) else {
+                return
+            }
+            select(app)
         }
     }
 }
 
-struct AppIconImage: View {
-    let app: InstalledApp
-    let size: CGFloat
-
-    var body: some View {
-        Image(nsImage: nonTemplateIcon)
-            .resizable()
-            .interpolation(.high)
-            .frame(width: size, height: size)
+enum AppMenuIcon {
+    static var dropdownIndicator: NSImage? {
+        let image = NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil)
+        image?.isTemplate = true
+        image?.size = NSSize(width: 11, height: 11)
+        return image
     }
 
-    private var nonTemplateIcon: NSImage {
-        let image = app.icon.copy() as? NSImage ?? app.icon
+    static func image(for app: InstalledApp) -> NSImage {
+        let image = app.icon.copy() as? NSImage ?? NSImage(size: NSSize(width: 16, height: 16))
         image.isTemplate = false
+        image.size = NSSize(width: 16, height: 16)
         return image
     }
 }
