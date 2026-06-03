@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "100000000000000000000501"
-               BuildableName = "Default App Manager.app"
+               BuildableName = "Default Mac App.app"
                BlueprintName = "DefaultAppManager"
                ReferencedContainer = "container:DefaultAppManager.xcodeproj">
             </BuildableReference>
@@ -38,7 +38,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "100000000000000000000501"
-            BuildableName = "Default App Manager.app"
+            BuildableName = "Default Mac App.app"
             BlueprintName = "DefaultAppManager"
             ReferencedContainer = "container:DefaultAppManager.xcodeproj">
          </BuildableReference>
@@ -55,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "100000000000000000000501"
-            BuildableName = "Default App Manager.app"
+            BuildableName = "Default Mac App.app"
             BlueprintName = "DefaultAppManager"
             ReferencedContainer = "container:DefaultAppManager.xcodeproj">
          </BuildableReference>

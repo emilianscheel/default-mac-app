@@ -52,7 +52,9 @@ struct AppDetailView: View {
                         showingAddSheet = true
                     } label: {
                         Image(systemName: "plus")
+                            .frame(width: 22, height: 22)
                     }
+                    .buttonStyle(.plain)
                     .help("Add a file type default for \(app.name)")
 
                     Button {
@@ -61,22 +63,20 @@ struct AppDetailView: View {
                         }
                     } label: {
                         Image(systemName: "minus")
+                            .frame(width: 22, height: 22)
                     }
+                    .buttonStyle(.plain)
                     .disabled(selectedFileType.map { !store.canRestorePreviousDefault(for: $0) } ?? true)
                     .help("Restore the previously recorded default app")
 
                     Spacer()
 
-                    if assignedFileTypes.isEmpty {
-                        Text("No curated file types are currently assigned to this app.")
-                            .foregroundStyle(.secondary)
-                    } else if let selectedFileType, !store.canRestorePreviousDefault(for: selectedFileType) {
+                    if let selectedFileType, !store.canRestorePreviousDefault(for: selectedFileType) {
                         Text("No previous default recorded for the selected file type.")
                             .foregroundStyle(.secondary)
                     }
                 }
                 .padding(10)
-                .background(Color(nsColor: .controlBackgroundColor))
             }
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay {
@@ -101,9 +101,7 @@ struct AppDetailView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(app.name)
                     .font(.title2.weight(.semibold))
-                Text(app.bundleIdentifier)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                CopyableBundleIdentifierText(bundleIdentifier: app.bundleIdentifier)
             }
 
             Spacer()

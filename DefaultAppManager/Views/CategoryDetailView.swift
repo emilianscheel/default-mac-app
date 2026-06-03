@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct CategoryDetailView: View {
@@ -24,11 +25,6 @@ struct CategoryDetailView: View {
 
     private var header: some View {
         HStack(spacing: 14) {
-            Image(systemName: category.systemImage)
-                .font(.system(size: 32, weight: .regular))
-                .symbolRenderingMode(.hierarchical)
-                .frame(width: 44, height: 44)
-
             VStack(alignment: .leading, spacing: 3) {
                 Text(category.name)
                     .font(.title2.weight(.semibold))
@@ -44,13 +40,15 @@ struct CategoryDetailView: View {
                     Button {
                         store.setDefault(app: app, for: category)
                     } label: {
-                        Text(app.name)
+                        AppMenuLabel(app: app, isSelected: false)
                     }
                 }
             } label: {
-                Label("Set All", systemImage: "checklist")
+                Text("Set All")
+                    .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
             }
-            .menuStyle(.borderedButton)
+            .menuStyle(.borderlessButton)
+            .fixedSize(horizontal: true, vertical: false)
             .help("Set the default opening app for every file type in \(category.name)")
         }
     }
@@ -96,23 +94,53 @@ struct AppPickerMenu: View {
                     Button {
                         store.setDefault(app: app, for: fileType)
                     } label: {
-                        Label(app.name, systemImage: store.currentHandlers[fileType.id] == app.bundleIdentifier ? "checkmark" : "app")
+                        AppMenuLabel(app: app, isSelected: store.currentHandlers[fileType.id] == app.bundleIdentifier)
                     }
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Text(store.currentAppName(for: fileType))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
+            Text(store.currentAppName(for: fileType))
+                .lineLimit(1)
+                .truncationMode(.tail)
             .frame(minWidth: 190, idealWidth: 220, maxWidth: 260, alignment: .trailing)
         }
         .menuStyle(.borderlessButton)
         .fixedSize(horizontal: true, vertical: false)
         .help("Choose the default app for \(fileType.displayName)")
+    }
+}
+
+struct AppMenuLabel: View {
+    let app: InstalledApp
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "checkmark")
+                .opacity(isSelected ? 1 : 0)
+                .frame(width: 14)
+
+            AppIconImage(app: app, size: 16)
+
+            Text(app.name)
+        }
+    }
+}
+
+struct AppIconImage: View {
+    let app: InstalledApp
+    let size: CGFloat
+
+    var body: some View {
+        Image(nsImage: nonTemplateIcon)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: size, height: size)
+    }
+
+    private var nonTemplateIcon: NSImage {
+        let image = app.icon.copy() as? NSImage ?? app.icon
+        image.isTemplate = false
+        return image
     }
 }

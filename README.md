@@ -1,4 +1,4 @@
-# Default App Manager
+# Default Mac App
 
 A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for curated file types.
 
@@ -6,7 +6,5 @@ A native SwiftUI macOS menu bar app for changing the current user's Finder/open 
 
 ```sh
 xcodebuild -project DefaultAppManager.xcodeproj -scheme DefaultAppManager -configuration Debug -derivedDataPath .build/DerivedData build
-open ".build/DerivedData/Build/Products/Debug/Default App Manager.app"
+open ".build/DerivedData/Build/Products/Debug/Default Mac App.app"
 ```
-
-The debug build uses stable ad-hoc local signing and no app sandbox. LaunchServices default-handler changes are per-user macOS preferences and do not require a special permission grant.

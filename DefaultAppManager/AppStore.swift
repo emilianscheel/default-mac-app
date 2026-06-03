@@ -1,5 +1,7 @@
 import Foundation
+import SwiftUI
 
+@MainActor
 final class AppStore: ObservableObject {
     @Published var categories = FileTypeCatalog.categories
     @Published var apps: [InstalledApp] = []
@@ -12,6 +14,7 @@ final class AppStore: ObservableObject {
     private let launchServices = LaunchServicesClient()
     private lazy var discovery = AppDiscoveryService(launchServices: launchServices)
     private let previousDefaultsKey = "PreviousDefaultHandlers"
+    private var refreshTask: Task<Void, Never>?
     private var previousDefaults: [String: String] {
         get { UserDefaults.standard.dictionary(forKey: previousDefaultsKey) as? [String: String] ?? [:] }
         set { UserDefaults.standard.set(newValue, forKey: previousDefaultsKey) }
@@ -26,6 +29,30 @@ final class AppStore: ObservableObject {
         categories = FileTypeCatalog.categories
         apps = discovery.discoverApps(for: categories)
         refreshHandlers()
+        reconcileSelection()
+    }
+
+    func refreshAnimated() {
+        refreshTask?.cancel()
+
+        let discovery = discovery
+        let categories = FileTypeCatalog.categories
+        refreshTask = Task {
+            let discoveredApps = await Task.detached(priority: .userInitiated) {
+                discovery.discoverApps(for: categories)
+            }.value
+
+            guard !Task.isCancelled else {
+                return
+            }
+
+            withAnimation(.snappy(duration: 0.22)) {
+                self.categories = categories
+                self.apps = discoveredApps
+            }
+            refreshHandlers()
+            reconcileSelection()
+        }
     }
 
     func refreshHandlers() {
@@ -149,6 +176,22 @@ final class AppStore: ObservableObject {
                 app.supportedTypeIdentifiers.contains(fileType.utiIdentifier)
                     || !app.supportedExtensions.isDisjoint(with: Set(fileType.extensions))
             }
+        }
+    }
+
+    private func reconcileSelection() {
+        switch selection {
+        case .app(let bundleIdentifier):
+            if app(for: bundleIdentifier) == nil {
+                selection = .category(categories[0].id)
+                selectedAppFileTypeID = nil
+            }
+        case .category(let id):
+            if category(for: id) == nil {
+                selection = .category(categories[0].id)
+            }
+        case nil:
+            selection = .category(categories[0].id)
         }
     }
 }

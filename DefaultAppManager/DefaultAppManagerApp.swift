@@ -11,13 +11,7 @@ struct DefaultAppManagerApp: App {
             Button {
                 appDelegate.showSettings(store: store)
             } label: {
-                Label("Open Default App Manager", systemImage: "door.left.hand.open")
-            }
-
-            Button {
-                store.refresh()
-            } label: {
-                Label("Refresh Applications", systemImage: "arrow.clockwise")
+                Label("Open Default Mac App", systemImage: "door.left.hand.open")
             }
 
             Divider()
@@ -32,6 +26,7 @@ struct DefaultAppManagerApp: App {
     }
 }
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var window: NSWindow?
 
@@ -50,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
             let hostingController = NSHostingController(rootView: rootView)
             let settingsWindow = NSWindow(contentViewController: hostingController)
-            settingsWindow.title = "Default App Manager"
+            settingsWindow.title = "Default Mac App"
             settingsWindow.setContentSize(NSSize(width: 1020, height: 680))
             settingsWindow.minSize = NSSize(width: 820, height: 540)
             settingsWindow.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
@@ -62,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window = settingsWindow
         }
 
+        store.refreshAnimated()
         NSApp.setActivationPolicy(.regular)
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

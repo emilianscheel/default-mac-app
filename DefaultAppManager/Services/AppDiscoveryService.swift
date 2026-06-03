@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-final class AppDiscoveryService {
+final class AppDiscoveryService: @unchecked Sendable {
     private let launchServices: LaunchServicesClient
 
     init(launchServices: LaunchServicesClient) {

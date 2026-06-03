@@ -16,6 +16,7 @@
 		100000000000000000000107 /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000207 /* CategoryDetailView.swift */; };
 		100000000000000000000108 /* AppDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000208 /* AppDetailView.swift */; };
 		100000000000000000000109 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000209 /* Assets.xcassets */; };
+		10000000000000000000010A /* CopyableBundleIdentifierText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000020A /* CopyableBundleIdentifierText.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,8 +29,9 @@
 		100000000000000000000207 /* CategoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryDetailView.swift; sourceTree = "<group>"; };
 		100000000000000000000208 /* AppDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailView.swift; sourceTree = "<group>"; };
 		100000000000000000000209 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		10000000000000000000020A /* CopyableBundleIdentifierText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableBundleIdentifierText.swift; sourceTree = "<group>"; };
 		100000000000000000000210 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		100000000000000000000211 /* Default App Manager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Default App Manager.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000211 /* Default Mac App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Default Mac App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,7 +70,7 @@
 		100000000000000000000403 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				100000000000000000000211 /* Default App Manager.app */,
+				100000000000000000000211 /* Default Mac App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -88,6 +90,7 @@
 				100000000000000000000206 /* SettingsRootView.swift */,
 				100000000000000000000207 /* CategoryDetailView.swift */,
 				100000000000000000000208 /* AppDetailView.swift */,
+				10000000000000000000020A /* CopyableBundleIdentifierText.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -108,8 +111,8 @@
 			dependencies = (
 			);
 			name = DefaultAppManager;
-			productName = "Default App Manager";
-			productReference = 100000000000000000000211 /* Default App Manager.app */;
+			productName = "Default Mac App";
+			productReference = 100000000000000000000211 /* Default Mac App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -169,6 +172,7 @@
 				100000000000000000000106 /* SettingsRootView.swift in Sources */,
 				100000000000000000000107 /* CategoryDetailView.swift in Sources */,
 				100000000000000000000108 /* AppDetailView.swift in Sources */,
+				10000000000000000000010A /* CopyableBundleIdentifierText.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,7 +311,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.DefaultAppManager;
-				PRODUCT_NAME = "Default App Manager";
+				PRODUCT_NAME = "Default Mac App";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -332,7 +336,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.DefaultAppManager;
-				PRODUCT_NAME = "Default App Manager";
+				PRODUCT_NAME = "Default Mac App";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};

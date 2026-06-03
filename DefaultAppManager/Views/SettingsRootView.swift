@@ -54,16 +54,6 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .searchable(text: $store.searchText, placement: .sidebar, prompt: "Search")
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    store.refresh()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .help("Refresh applications")
-            }
-        }
     }
 }
 
