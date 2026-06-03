@@ -11,23 +11,23 @@ struct CopyableBundleIdentifierText: View {
         Button {
             copyBundleIdentifier()
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text(bundleIdentifier)
                     .font(.system(.subheadline, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                Spacer(minLength: 4)
-
                 Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
-                    .foregroundStyle(didCopy ? .green : .secondary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                     .opacity(didCopy || isHovering ? 1 : 0)
-                    .frame(width: 14)
+                    .frame(width: 11)
+                    .animation(.easeInOut(duration: 0.15), value: isHovering)
+                    .animation(.easeInOut(duration: 0.15), value: didCopy)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: 360, alignment: .leading)
         .onHover { hovering in
             isHovering = hovering
         }
