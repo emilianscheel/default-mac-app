@@ -105,7 +105,39 @@ struct AppPickerMenu: View {
     }
 }
 
-struct AppChoiceMenu: NSViewRepresentable {
+struct AppChoiceMenu: View {
+    let title: String
+    let options: [InstalledApp]
+    let emptyTitle: String
+    let isSelected: (InstalledApp) -> Bool
+    let select: (InstalledApp) -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            AppChoiceMenuButton(
+                title: title,
+                options: options,
+                emptyTitle: emptyTitle,
+                isSelected: isSelected,
+                select: select
+            )
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(isHovered ? Color(nsColor: .labelColor).opacity(0.07) : .clear)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 5))
+            .onHover { isHovered = $0 }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct AppChoiceMenuButton: NSViewRepresentable {
     let title: String
     let options: [InstalledApp]
     let emptyTitle: String
@@ -123,7 +155,7 @@ struct AppChoiceMenu: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> NSButton {
-        let button = NSButton(title: title, target: context.coordinator, action: #selector(Coordinator.showMenu(_:)))
+        let button = NSButton(title: AppMenuIcon.triggerTitle(title), target: context.coordinator, action: #selector(Coordinator.showMenu(_:)))
         button.isBordered = false
         button.alignment = .right
         button.controlSize = .regular
@@ -140,7 +172,8 @@ struct AppChoiceMenu: NSViewRepresentable {
     }
 
     func updateNSView(_ button: NSButton, context: Context) {
-        button.title = title
+        button.title = AppMenuIcon.triggerTitle(title)
+        button.image = AppMenuIcon.dropdownIndicator
         context.coordinator.title = title
         context.coordinator.options = options
         context.coordinator.emptyTitle = emptyTitle
@@ -175,6 +208,8 @@ struct AppChoiceMenu: NSViewRepresentable {
             let menu = NSMenu(title: title)
             menu.autoenablesItems = false
             menu.showsStateColumn = true
+            var selectedItem: NSMenuItem?
+            var selectedIndex: Int?
 
             if options.isEmpty {
                 let item = NSMenuItem(title: emptyTitle, action: nil, keyEquivalent: "")
@@ -182,16 +217,25 @@ struct AppChoiceMenu: NSViewRepresentable {
                 menu.addItem(item)
             } else {
                 for app in options {
+                    let selected = isSelected(app)
                     let item = NSMenuItem(title: app.name, action: #selector(selectApp(_:)), keyEquivalent: "")
                     item.target = self
                     item.representedObject = app.bundleIdentifier
                     item.image = AppMenuIcon.image(for: app)
-                    item.state = isSelected(app) ? .on : .off
+                    item.state = selected ? .on : .off
                     menu.addItem(item)
+
+                    if selected {
+                        selectedItem = item
+                        selectedIndex = menu.items.count - 1
+                    }
                 }
             }
 
-            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
+            let positioningItem = selectedIndex
+                .flatMap { menu.items.indices.contains($0 + 1) ? menu.items[$0 + 1] : selectedItem }
+                ?? menu.items.first
+            menu.popUp(positioning: positioningItem, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
         }
 
         @objc private func selectApp(_ sender: NSMenuItem) {
@@ -205,10 +249,35 @@ struct AppChoiceMenu: NSViewRepresentable {
 }
 
 enum AppMenuIcon {
+    static let dropdownIndicatorConfiguration = NSImage.SymbolConfiguration(pointSize: 8.5, weight: .regular, scale: .small)
+
+    static func triggerTitle(_ title: String) -> String {
+        "\(title) "
+    }
+
     static var dropdownIndicator: NSImage? {
-        let image = NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil)
-        image?.isTemplate = true
-        image?.size = NSSize(width: 11, height: 11)
+        guard let symbol = NSImage(systemSymbolName: "chevron.up.chevron.down", accessibilityDescription: nil)?
+            .withSymbolConfiguration(dropdownIndicatorConfiguration) else {
+            return nil
+        }
+
+        let canvasSize = NSSize(width: 10, height: 14)
+        let symbolSize = NSSize(width: 8, height: 10)
+        let image = NSImage(size: canvasSize)
+        image.lockFocus()
+        symbol.draw(
+            in: NSRect(
+                x: (canvasSize.width - symbolSize.width) / 2,
+                y: (canvasSize.height - symbolSize.height) / 2,
+                width: symbolSize.width,
+                height: symbolSize.height
+            ),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1
+        )
+        image.unlockFocus()
+        image.isTemplate = true
         return image
     }
 
