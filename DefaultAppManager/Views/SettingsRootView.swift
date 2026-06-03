@@ -31,35 +31,60 @@ struct SidebarView: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        List(selection: $store.selection) {
-            Section("File Types") {
-                ForEach(store.filteredCategories) { category in
-                    Label(category.name, systemImage: category.systemImage)
-                        .tag(SidebarSelection.category(category.id))
-                }
-            }
-
-            Section("Applications") {
-                ForEach(store.filteredApps) { app in
-                    HStack(spacing: 8) {
-                        Image(nsImage: app.icon)
-                            .resizable()
-                            .frame(width: 18, height: 18)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(app.name)
-                                .lineLimit(1)
-                            Text(app.bundleIdentifier)
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
+        Group {
+            if store.hasNoSidebarSearchResults {
+                SidebarNoResultsView(query: store.sidebarSearchQuery)
+            } else {
+                List(selection: $store.selection) {
+                    Section("File Types") {
+                        ForEach(store.filteredCategories) { category in
+                            Label(category.name, systemImage: category.systemImage)
+                                .tag(SidebarSelection.category(category.id))
                         }
                     }
-                    .tag(SidebarSelection.app(app.bundleIdentifier))
+
+                    Section("Applications") {
+                        ForEach(store.filteredApps) { app in
+                            HStack(spacing: 8) {
+                                Image(nsImage: app.icon)
+                                    .resizable()
+                                    .frame(width: 18, height: 18)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(app.name)
+                                        .lineLimit(1)
+                                    Text(app.bundleIdentifier)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .tag(SidebarSelection.app(app.bundleIdentifier))
+                        }
+                    }
                 }
+                .listStyle(.sidebar)
             }
         }
-        .listStyle(.sidebar)
         .searchable(text: $store.searchText, placement: .sidebar, prompt: "Search")
+    }
+}
+
+struct SidebarNoResultsView: View {
+    let query: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .regular))
+                .foregroundStyle(.secondary)
+            Text("No Results for \"\(query)\"")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 

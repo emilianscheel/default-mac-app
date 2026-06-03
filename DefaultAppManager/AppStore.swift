@@ -69,6 +69,14 @@ final class AppStore: ObservableObject {
         categories.flatMap(\.fileTypes)
     }
 
+    var sidebarSearchQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var hasNoSidebarSearchResults: Bool {
+        !sidebarSearchQuery.isEmpty && filteredCategories.isEmpty && filteredApps.isEmpty
+    }
+
     var filteredCategories: [FileTypeCategory] {
         let query = normalizedSearch
         guard !query.isEmpty else {
