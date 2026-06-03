@@ -4,48 +4,53 @@ import SwiftUI
 @main
 struct DefaultAppManagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store = AppStore()
 
     var body: some Scene {
-        MenuBarExtra {
-            Button {
-                appDelegate.showSettings(store: store)
-            } label: {
-                Label("Open Default Mac App", systemImage: "door.left.hand.open")
-            }
-
-            Divider()
-
-            Button("Quit") {
-                NSApp.terminate(nil)
-            }
-        } label: {
-            Image(systemName: "door.left.hand.open")
+        Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.menu)
     }
 }
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+    private let store = AppStore()
+    private var statusItem: NSStatusItem?
     private var window: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        configureStatusItem()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }
 
-    func showSettings(store: AppStore) {
+    @objc private func openSettings() {
+        showSettings()
+    }
+
+    private func configureStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = item.button {
+            button.image = NSImage(systemSymbolName: "door.left.hand.open", accessibilityDescription: "Open Default Mac App")
+            button.image?.isTemplate = true
+            button.action = #selector(openSettings)
+            button.target = self
+        }
+        statusItem = item
+    }
+
+    private func showSettings() {
         if window == nil {
             let rootView = SettingsRootView()
                 .environmentObject(store)
 
             let hostingController = NSHostingController(rootView: rootView)
             let settingsWindow = NSWindow(contentViewController: hostingController)
-            settingsWindow.title = "Default Mac App"
+            settingsWindow.title = ""
+            settingsWindow.titleVisibility = .hidden
             settingsWindow.setContentSize(NSSize(width: 1020, height: 680))
             settingsWindow.minSize = NSSize(width: 820, height: 540)
             settingsWindow.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]

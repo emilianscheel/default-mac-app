@@ -45,8 +45,14 @@ struct SidebarView: View {
                         Image(nsImage: app.icon)
                             .resizable()
                             .frame(width: 18, height: 18)
-                        Text(app.name)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(app.name)
+                                .lineLimit(1)
+                            Text(app.bundleIdentifier)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                     .tag(SidebarSelection.app(app.bundleIdentifier))
                 }

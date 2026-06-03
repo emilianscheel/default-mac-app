@@ -28,18 +28,15 @@ struct AppDetailView: View {
             VStack(spacing: 0) {
                 List(selection: $store.selectedAppFileTypeID) {
                     ForEach(assignedFileTypes) { fileType in
-                        HStack(spacing: 12) {
-                            Image(systemName: fileType.systemImage)
-                                .symbolRenderingMode(.hierarchical)
-                                .frame(width: 24)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(fileType.displayName)
-                                Text("\(fileType.primaryExtension)  \(fileType.utiIdentifier)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(fileType.displayName)
+                            Text("\(fileType.primaryExtension)  \(fileType.utiIdentifier)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                         .padding(.vertical, 4)
+                        .padding(.leading, 6)
+                        .padding(.trailing, 6)
                         .tag(fileType.id)
                     }
                 }

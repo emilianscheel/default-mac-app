@@ -17,6 +17,8 @@ struct CategoryDetailView: View {
             List(category.fileTypes) { fileType in
                 FileTypeAssignmentRow(fileType: fileType)
                     .padding(.vertical, 6)
+                    .padding(.leading, 12)
+                    .padding(.trailing, 12)
             }
             .listStyle(.inset)
         }
@@ -60,11 +62,6 @@ struct FileTypeAssignmentRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: fileType.systemImage)
-                .font(.system(size: 19))
-                .symbolRenderingMode(.hierarchical)
-                .frame(width: 28)
-
             VStack(alignment: .leading, spacing: 2) {
                 Text(fileType.displayName)
                     .font(.body)
