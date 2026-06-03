@@ -71,7 +71,8 @@ struct FileTypeAssignmentRow: View {
                     Text(fileType.primaryExtension)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(.secondary)
-                    CopyableBundleIdentifierText(bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
+                    CopyableBundleIdentifierText(
+                        bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
                 }
             }
 
@@ -155,7 +156,9 @@ struct AppChoiceMenuButton: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> NSButton {
-        let button = NSButton(title: AppMenuIcon.triggerTitle(title), target: context.coordinator, action: #selector(Coordinator.showMenu(_:)))
+        let button = NSButton(
+            title: AppMenuIcon.triggerTitle(title), target: context.coordinator,
+            action: #selector(Coordinator.showMenu(_:)))
         button.isBordered = false
         button.alignment = .right
         button.controlSize = .regular
@@ -218,7 +221,8 @@ struct AppChoiceMenuButton: NSViewRepresentable {
             } else {
                 for app in options {
                     let selected = isSelected(app)
-                    let item = NSMenuItem(title: app.name, action: #selector(selectApp(_:)), keyEquivalent: "")
+                    let item = NSMenuItem(
+                        title: app.name, action: #selector(selectApp(_:)), keyEquivalent: "")
                     item.target = self
                     item.representedObject = app.bundleIdentifier
                     item.image = AppMenuIcon.image(for: app)
@@ -232,15 +236,22 @@ struct AppChoiceMenuButton: NSViewRepresentable {
                 }
             }
 
-            let positioningItem = selectedIndex
+            let positioningItem =
+                selectedIndex
                 .flatMap { menu.items.indices.contains($0 + 1) ? menu.items[$0 + 1] : selectedItem }
                 ?? menu.items.first
-            menu.popUp(positioning: positioningItem, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
+            let selectedItemVerticalAlignmentOffset: CGFloat = 4
+            menu.popUp(
+                positioning: positioningItem,
+                at: NSPoint(x: 0, y: sender.bounds.height + selectedItemVerticalAlignmentOffset),
+                in: sender
+            )
         }
 
         @objc private func selectApp(_ sender: NSMenuItem) {
             guard let bundleIdentifier = sender.representedObject as? String,
-                  let app = options.first(where: { $0.bundleIdentifier == bundleIdentifier }) else {
+                let app = options.first(where: { $0.bundleIdentifier == bundleIdentifier })
+            else {
                 return
             }
             select(app)
@@ -249,15 +260,19 @@ struct AppChoiceMenuButton: NSViewRepresentable {
 }
 
 enum AppMenuIcon {
-    static let dropdownIndicatorConfiguration = NSImage.SymbolConfiguration(pointSize: 8.5, weight: .regular, scale: .small)
+    static let dropdownIndicatorConfiguration = NSImage.SymbolConfiguration(
+        pointSize: 8.5, weight: .regular, scale: .small)
 
     static func triggerTitle(_ title: String) -> String {
         "\(title) "
     }
 
     static var dropdownIndicator: NSImage? {
-        guard let symbol = NSImage(systemSymbolName: "chevron.up.chevron.down", accessibilityDescription: nil)?
-            .withSymbolConfiguration(dropdownIndicatorConfiguration) else {
+        guard
+            let symbol = NSImage(
+                systemSymbolName: "chevron.up.chevron.down", accessibilityDescription: nil)?
+                .withSymbolConfiguration(dropdownIndicatorConfiguration)
+        else {
             return nil
         }
 
