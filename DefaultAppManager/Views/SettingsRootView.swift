@@ -43,20 +43,22 @@ struct SidebarView: View {
 
                     Section("File Types") {
                         ForEach(store.filteredCategories) { category in
-                            Label(category.name, systemImage: category.systemImage)
+                            SidebarResultRow(
+                                title: category.name,
+                                subtitle: resultSubtitle(count: store.sidebarResultCount(for: category)),
+                                systemImage: category.systemImage
+                            )
                                 .tag(SidebarSelection.category(category.id))
                         }
                     }
 
                     Section("Applications") {
                         ForEach(store.filteredApps) { app in
-                            HStack(spacing: 8) {
-                                Image(nsImage: app.icon)
-                                    .resizable()
-                                    .frame(width: 18, height: 18)
-                                Text(app.name)
-                                    .lineLimit(1)
-                            }
+                            SidebarResultRow(
+                                title: app.name,
+                                subtitle: resultSubtitle(count: store.sidebarResultCount(for: app)),
+                                nsImage: app.icon
+                            )
                             .tag(SidebarSelection.app(app.bundleIdentifier))
                         }
                     }
@@ -65,6 +67,63 @@ struct SidebarView: View {
             }
         }
         .searchable(text: $store.searchText, placement: .sidebar, prompt: "Search")
+    }
+
+    private func resultSubtitle(count: Int) -> String? {
+        guard !store.sidebarSearchQuery.isEmpty else {
+            return nil
+        }
+        return count == 1 ? "1 result" : "\(count) results"
+    }
+}
+
+struct SidebarResultRow: View {
+    let title: String
+    let subtitle: String?
+    let systemImage: String?
+    let nsImage: NSImage?
+
+    init(title: String, subtitle: String?, systemImage: String) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.nsImage = nil
+    }
+
+    init(title: String, subtitle: String?, nsImage: NSImage) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = nil
+        self.nsImage = nsImage
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            icon
+                .frame(width: 18, height: 18)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .lineLimit(1)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var icon: some View {
+        if let nsImage {
+            Image(nsImage: nsImage)
+                .resizable()
+        } else if let systemImage {
+            Image(systemName: systemImage)
+                .symbolRenderingMode(.hierarchical)
+        }
     }
 }
 
