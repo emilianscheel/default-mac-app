@@ -7,9 +7,15 @@ CONFIGURATION="Debug"
 DERIVED_DATA_PATH=".build/DerivedData"
 PRODUCT_NAME="Default Mac App"
 APP_BUNDLE="${DERIVED_DATA_PATH}/Build/Products/${CONFIGURATION}/${PRODUCT_NAME}.app"
+TARGET_BUILD_DIR="${DERIVED_DATA_PATH}/Build/Intermediates.noindex/${SCHEME}.build/${CONFIGURATION}/${SCHEME}.build"
 BUNDLE_ID="com.local.DefaultAppManager"
 
 cd "$(dirname "$0")"
+
+echo "Clearing stale app bundle and asset catalog outputs..."
+rm -rf "${APP_BUNDLE}"
+rm -rf "${TARGET_BUILD_DIR}/assetcatalog_output"
+rm -f "${TARGET_BUILD_DIR}"/assetcatalog_*
 
 echo "Building ${PRODUCT_NAME} (${CONFIGURATION})..."
 xcodebuild \
@@ -40,4 +46,3 @@ fi
 
 echo "Launching ${APP_BUNDLE}..."
 open "${APP_BUNDLE}"
-
