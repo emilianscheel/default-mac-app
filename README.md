@@ -4,7 +4,7 @@
 
 A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for curated file types.
 
-[Download](https://github.com/)
+[Download](https://github.com/emilianscheel/default-mac-app/releases/latest/download/Default-Mac-App.dmg)
 
 <img src="./assets/screenshot-1.png" alt="Default Mac App Screenshot 1" width="100%">
 
