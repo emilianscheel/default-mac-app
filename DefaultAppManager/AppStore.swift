@@ -10,7 +10,19 @@ final class AppStore: ObservableObject {
     @Published var searchText = ""
     @Published var errorMessage: String?
     @Published var selectedAppFileTypeID: String?
+    @Published var showInMenuBar: Bool {
+        didSet {
+            UserDefaults.standard.set(showInMenuBar, forKey: Self.showInMenuBarKey)
+        }
+    }
+    @Published var openOnLogin: Bool {
+        didSet {
+            UserDefaults.standard.set(openOnLogin, forKey: Self.openOnLoginKey)
+        }
+    }
 
+    private static let showInMenuBarKey = "ShowInMenuBar"
+    private static let openOnLoginKey = "OpenOnLogin"
     private let launchServices = LaunchServicesClient()
     private lazy var discovery = AppDiscoveryService(launchServices: launchServices)
     private let previousDefaultsKey = "PreviousDefaultHandlers"
@@ -21,8 +33,18 @@ final class AppStore: ObservableObject {
     }
 
     init() {
+        showInMenuBar = Self.boolPreference(forKey: Self.showInMenuBarKey, defaultValue: true)
+        openOnLogin = Self.boolPreference(forKey: Self.openOnLoginKey, defaultValue: true)
         refresh()
         selection = .category(categories[0].id)
+    }
+
+    func setShowInMenuBar(_ isShown: Bool) {
+        showInMenuBar = isShown
+    }
+
+    func setOpenOnLogin(_ isEnabled: Bool) {
+        openOnLogin = isEnabled
     }
 
     func refresh() {
@@ -178,6 +200,13 @@ final class AppStore: ObservableObject {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
+    private static func boolPreference(forKey key: String, defaultValue: Bool) -> Bool {
+        guard UserDefaults.standard.object(forKey: key) != nil else {
+            return defaultValue
+        }
+        return UserDefaults.standard.bool(forKey: key)
+    }
+
     private func appSearchMatchesCategory(_ category: FileTypeCategory, query: String) -> Bool {
         return apps.contains { app in
             app.searchText.contains(query) && category.fileTypes.contains { fileType in
@@ -189,6 +218,8 @@ final class AppStore: ObservableObject {
 
     private func reconcileSelection() {
         switch selection {
+        case .settings:
+            break
         case .app(let bundleIdentifier):
             if app(for: bundleIdentifier) == nil {
                 selection = .category(categories[0].id)

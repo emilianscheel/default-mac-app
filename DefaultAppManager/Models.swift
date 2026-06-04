@@ -3,6 +3,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 enum SidebarSelection: Hashable {
+    case settings
     case category(String)
     case app(String)
 }

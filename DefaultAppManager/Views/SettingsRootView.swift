@@ -10,7 +10,7 @@ struct SettingsRootView: View {
         } detail: {
             DetailView()
         }
-        .alert("LaunchServices Error", isPresented: errorBinding) {
+        .alert("App Error", isPresented: errorBinding) {
             Button("OK", role: .cancel) {
                 store.errorMessage = nil
             }
@@ -31,34 +31,35 @@ struct SidebarView: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        Group {
+        List(selection: $store.selection) {
+            Label("Settings", systemImage: "gearshape")
+                .tag(SidebarSelection.settings)
+
             if store.hasNoSidebarSearchResults {
                 SidebarNoResultsView(query: store.sidebarSearchQuery)
             } else {
-                List(selection: $store.selection) {
-                    Section("File Types") {
-                        ForEach(store.filteredCategories) { category in
-                            Label(category.name, systemImage: category.systemImage)
-                                .tag(SidebarSelection.category(category.id))
-                        }
-                    }
-
-                    Section("Applications") {
-                        ForEach(store.filteredApps) { app in
-                            HStack(spacing: 8) {
-                                Image(nsImage: app.icon)
-                                    .resizable()
-                                    .frame(width: 18, height: 18)
-                                Text(app.name)
-                                    .lineLimit(1)
-                            }
-                            .tag(SidebarSelection.app(app.bundleIdentifier))
-                        }
+                Section("File Types") {
+                    ForEach(store.filteredCategories) { category in
+                        Label(category.name, systemImage: category.systemImage)
+                            .tag(SidebarSelection.category(category.id))
                     }
                 }
-                .listStyle(.sidebar)
+
+                Section("Applications") {
+                    ForEach(store.filteredApps) { app in
+                        HStack(spacing: 8) {
+                            Image(nsImage: app.icon)
+                                .resizable()
+                                .frame(width: 18, height: 18)
+                            Text(app.name)
+                                .lineLimit(1)
+                        }
+                        .tag(SidebarSelection.app(app.bundleIdentifier))
+                    }
+                }
             }
         }
+        .listStyle(.sidebar)
         .searchable(text: $store.searchText, placement: .sidebar, prompt: "Search")
     }
 }
@@ -87,6 +88,8 @@ struct DetailView: View {
 
     var body: some View {
         switch store.selection {
+        case .settings:
+            SettingsDetailView()
         case .category(let id):
             if let category = store.category(for: id) {
                 CategoryDetailView(category: category)
@@ -102,6 +105,55 @@ struct DetailView: View {
         case nil:
             EmptyStateView(title: "Select a category or app", systemImage: "sidebar.left")
         }
+    }
+}
+
+struct SettingsDetailView: View {
+    @EnvironmentObject private var store: AppStore
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, 28)
+                .padding(.top, 24)
+                .padding(.bottom, 18)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle("Show in Menu Bar", isOn: showInMenuBarBinding)
+                    .toggleStyle(.checkbox)
+                Toggle("Open on Login", isOn: openOnLoginBinding)
+                    .toggleStyle(.checkbox)
+            }
+            .padding(28)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Settings")
+                .font(.title2.weight(.semibold))
+            Spacer()
+        }
+    }
+
+    private var showInMenuBarBinding: Binding<Bool> {
+        Binding(
+            get: { store.showInMenuBar },
+            set: { store.setShowInMenuBar($0) }
+        )
+    }
+
+    private var openOnLoginBinding: Binding<Bool> {
+        Binding(
+            get: { store.openOnLogin },
+            set: { store.setOpenOnLogin($0) }
+        )
     }
 }
 

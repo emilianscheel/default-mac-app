@@ -1,4 +1,6 @@
 import AppKit
+import Combine
+import ServiceManagement
 import SwiftUI
 
 @main
@@ -17,10 +19,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let store = AppStore()
     private var statusItem: NSStatusItem?
     private var window: NSWindow?
+    private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        configureStatusItem()
+        applyMenuBarPreference(store.showInMenuBar)
+        applyOpenOnLoginPreference(store.openOnLogin)
+        observeSettings()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -32,6 +37,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func configureStatusItem() {
+        guard statusItem == nil else {
+            return
+        }
+
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
             button.image = NSImage(systemSymbolName: "door.left.hand.open", accessibilityDescription: "Open Default Mac App")
@@ -40,6 +49,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             button.target = self
         }
         statusItem = item
+    }
+
+    private func removeStatusItem() {
+        guard let statusItem else {
+            return
+        }
+
+        NSStatusBar.system.removeStatusItem(statusItem)
+        self.statusItem = nil
+    }
+
+    private func observeSettings() {
+        store.$showInMenuBar
+            .dropFirst()
+            .sink { [weak self] isShown in
+                self?.applyMenuBarPreference(isShown)
+            }
+            .store(in: &cancellables)
+
+        store.$openOnLogin
+            .dropFirst()
+            .sink { [weak self] isEnabled in
+                self?.applyOpenOnLoginPreference(isEnabled)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func applyMenuBarPreference(_ isShown: Bool) {
+        if isShown {
+            configureStatusItem()
+        } else {
+            removeStatusItem()
+        }
+    }
+
+    private func applyOpenOnLoginPreference(_ isEnabled: Bool) {
+        do {
+            if isEnabled {
+                if SMAppService.mainApp.status != .enabled {
+                    try SMAppService.mainApp.register()
+                }
+            } else if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            store.errorMessage = "Unable to update Open on Login: \(error.localizedDescription)"
+        }
     }
 
     private func showSettings() {
