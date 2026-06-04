@@ -39,6 +39,7 @@ struct CategoryDetailView: View {
 
             AppChoiceMenu(
                 title: "Set All",
+                selectedApp: selectedCategoryApp,
                 options: store.apps,
                 emptyTitle: "No registered apps",
                 isSelected: { app in
@@ -55,6 +56,21 @@ struct CategoryDetailView: View {
             .fixedSize(horizontal: true, vertical: false)
             .help("Set the default opening app for every file type in \(category.name)")
         }
+    }
+
+    private var selectedCategoryApp: InstalledApp? {
+        let assignedBundleIdentifiers = Set(category.fileTypes.compactMap { fileType in
+            store.currentHandlers[fileType.id]
+        })
+        guard
+            assignedBundleIdentifiers.count == 1,
+            let bundleIdentifier = assignedBundleIdentifiers.first,
+            category.fileTypes.allSatisfy({ store.currentHandlers[$0.id] == bundleIdentifier })
+        else {
+            return nil
+        }
+
+        return store.app(for: bundleIdentifier)
     }
 }
 
@@ -90,6 +106,7 @@ struct AppPickerMenu: View {
     var body: some View {
         AppChoiceMenu(
             title: store.currentAppName(for: fileType),
+            selectedApp: store.currentHandlers[fileType.id].flatMap { store.app(for: $0) },
             options: store.appOptions(for: fileType),
             emptyTitle: "No registered apps",
             isSelected: { app in
@@ -108,6 +125,7 @@ struct AppPickerMenu: View {
 
 struct AppChoiceMenu: View {
     let title: String
+    let selectedApp: InstalledApp?
     let options: [InstalledApp]
     let emptyTitle: String
     let isSelected: (InstalledApp) -> Bool
@@ -120,16 +138,18 @@ struct AppChoiceMenu: View {
             Spacer(minLength: 0)
             AppChoiceMenuButton(
                 title: title,
+                selectedApp: selectedApp,
                 options: options,
                 emptyTitle: emptyTitle,
                 isSelected: isSelected,
                 select: select
             )
-            .padding(.horizontal, 6)
+            .padding(.leading, 2)
+            .padding(.trailing, 10)
             .padding(.vertical, 2)
             .background {
                 RoundedRectangle(cornerRadius: 5)
-                    .fill(isHovered ? Color(nsColor: .labelColor).opacity(0.07) : .clear)
+                    .fill(isHovered ? Color(nsColor: .labelColor).opacity(0.10) : .clear)
             }
             .contentShape(RoundedRectangle(cornerRadius: 5))
             .onHover { isHovered = $0 }
@@ -140,6 +160,7 @@ struct AppChoiceMenu: View {
 
 struct AppChoiceMenuButton: NSViewRepresentable {
     let title: String
+    let selectedApp: InstalledApp?
     let options: [InstalledApp]
     let emptyTitle: String
     let isSelected: (InstalledApp) -> Bool
@@ -157,17 +178,19 @@ struct AppChoiceMenuButton: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSButton {
         let button = NSButton(
-            title: AppMenuIcon.triggerTitle(title), target: context.coordinator,
+            title: "", target: context.coordinator,
             action: #selector(Coordinator.showMenu(_:)))
         button.isBordered = false
         button.alignment = .right
         button.controlSize = .regular
+        button.attributedTitle = AppMenuIcon.triggerTitle(title, selectedApp: selectedApp)
         button.image = AppMenuIcon.dropdownIndicator
         button.imagePosition = .imageTrailing
         button.imageHugsTitle = true
         button.imageScaling = .scaleNone
         button.lineBreakMode = .byTruncatingTail
         button.setButtonType(.momentaryPushIn)
+        (button.cell as? NSButtonCell)?.highlightsBy = []
         button.setContentHuggingPriority(.required, for: .horizontal)
         button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         context.coordinator.button = button
@@ -175,8 +198,9 @@ struct AppChoiceMenuButton: NSViewRepresentable {
     }
 
     func updateNSView(_ button: NSButton, context: Context) {
-        button.title = AppMenuIcon.triggerTitle(title)
+        button.attributedTitle = AppMenuIcon.triggerTitle(title, selectedApp: selectedApp)
         button.image = AppMenuIcon.dropdownIndicator
+        (button.cell as? NSButtonCell)?.highlightsBy = []
         context.coordinator.title = title
         context.coordinator.options = options
         context.coordinator.emptyTitle = emptyTitle
@@ -263,8 +287,24 @@ enum AppMenuIcon {
     static let dropdownIndicatorConfiguration = NSImage.SymbolConfiguration(
         pointSize: 8.5, weight: .regular, scale: .small)
 
-    static func triggerTitle(_ title: String) -> String {
-        "\(title) "
+    static func triggerTitle(_ title: String, selectedApp: InstalledApp?) -> NSAttributedString {
+        let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.labelColor,
+            .font: font
+        ]
+        let attributedTitle = NSMutableAttributedString()
+
+        if let selectedApp {
+            let attachment = NSTextAttachment()
+            attachment.image = image(for: selectedApp)
+            attachment.bounds = NSRect(x: 0, y: -3, width: 16, height: 16)
+            attributedTitle.append(NSAttributedString(attachment: attachment))
+            attributedTitle.append(NSAttributedString(string: " ", attributes: attributes))
+        }
+
+        attributedTitle.append(NSAttributedString(string: "\(title) ", attributes: attributes))
+        return attributedTitle
     }
 
     static var dropdownIndicator: NSImage? {
