@@ -14,7 +14,7 @@ struct CategoryDetailView: View {
 
             Divider()
 
-            List(category.fileTypes) { fileType in
+            List(store.filteredFileTypes(in: category)) { fileType in
                 FileTypeAssignmentRow(fileType: fileType)
                     .padding(.vertical, 6)
                     .padding(.leading, 12)
@@ -81,14 +81,22 @@ struct FileTypeAssignmentRow: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(fileType.displayName)
-                    .font(.body)
+                SearchHighlightedText(
+                    fileType.displayName,
+                    query: store.detailSearchQuery,
+                    font: .body
+                )
                 HStack(spacing: 8) {
-                    Text(fileType.primaryExtension)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                    SearchHighlightedText(
+                        fileType.primaryExtension,
+                        query: store.detailSearchQuery,
+                        font: .system(.caption, design: .monospaced),
+                        foregroundStyle: .secondary
+                    )
                     CopyableBundleIdentifierText(
-                        bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
+                        bundleIdentifier: fileType.utiIdentifier,
+                        textStyle: .caption,
+                        searchQuery: store.detailSearchQuery)
                 }
             }
 

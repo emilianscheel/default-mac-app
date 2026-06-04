@@ -6,7 +6,7 @@ struct AppDetailView: View {
     @State private var showingAddSheet = false
 
     private var assignedFileTypes: [FileType] {
-        store.assignedFileTypes(for: app)
+        store.filteredAssignedFileTypes(for: app)
     }
 
     private var selectedFileType: FileType? {
@@ -29,12 +29,22 @@ struct AppDetailView: View {
                 List(selection: $store.selectedAppFileTypeID) {
                     ForEach(assignedFileTypes) { fileType in
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(fileType.displayName)
+                            SearchHighlightedText(
+                                fileType.displayName,
+                                query: store.detailSearchQuery,
+                                font: .body
+                            )
                             HStack(spacing: 8) {
-                                Text(fileType.primaryExtension)
-                                    .font(.system(.caption, design: .monospaced))
-                                    .foregroundStyle(.secondary)
-                                CopyableBundleIdentifierText(bundleIdentifier: fileType.utiIdentifier, textStyle: .caption)
+                                SearchHighlightedText(
+                                    fileType.primaryExtension,
+                                    query: store.detailSearchQuery,
+                                    font: .system(.caption, design: .monospaced),
+                                    foregroundStyle: .secondary
+                                )
+                                CopyableBundleIdentifierText(
+                                    bundleIdentifier: fileType.utiIdentifier,
+                                    textStyle: .caption,
+                                    searchQuery: store.detailSearchQuery)
                             }
                         }
                         .padding(.vertical, 4)

@@ -95,6 +95,10 @@ final class AppStore: ObservableObject {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    var detailSearchQuery: String {
+        sidebarSearchQuery
+    }
+
     var hasNoSidebarSearchResults: Bool {
         !sidebarSearchQuery.isEmpty && !settingsMatchesSearch && filteredCategories.isEmpty && filteredApps.isEmpty
     }
@@ -179,6 +183,14 @@ final class AppStore: ObservableObject {
         allFileTypes.filter { currentHandlers[$0.id] == app.bundleIdentifier }
     }
 
+    func filteredFileTypes(in category: FileTypeCategory) -> [FileType] {
+        filterFileTypes(category.fileTypes)
+    }
+
+    func filteredAssignedFileTypes(for app: InstalledApp) -> [FileType] {
+        filterFileTypes(assignedFileTypes(for: app))
+    }
+
     func canRestorePreviousDefault(for fileType: FileType) -> Bool {
         previousDefaults[fileType.id] != nil
     }
@@ -202,6 +214,14 @@ final class AppStore: ObservableObject {
 
     private var normalizedSearch: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private func filterFileTypes(_ fileTypes: [FileType]) -> [FileType] {
+        let query = normalizedSearch
+        guard !query.isEmpty else {
+            return fileTypes
+        }
+        return fileTypes.filter { $0.searchText.contains(query) }
     }
 
     private var settingsMatchesSearch: Bool {

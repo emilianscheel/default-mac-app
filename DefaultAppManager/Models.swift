@@ -35,6 +35,10 @@ struct FileType: Identifiable, Hashable {
     var searchTerms: [String] {
         [displayName, utiIdentifier] + extensions + extensions.map { ".\($0)" } + keywords
     }
+
+    var searchText: String {
+        searchTerms.joined(separator: " ").lowercased()
+    }
 }
 
 struct InstalledApp: Identifiable {
