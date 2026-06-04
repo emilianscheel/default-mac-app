@@ -32,8 +32,10 @@ struct SidebarView: View {
 
     var body: some View {
         List(selection: $store.selection) {
-            Label("Settings", systemImage: "gearshape")
-                .tag(SidebarSelection.settings)
+            if store.shouldShowSettingsInSidebar {
+                Label("Settings", systemImage: "gearshape")
+                    .tag(SidebarSelection.settings)
+            }
 
             if store.hasNoSidebarSearchResults {
                 SidebarNoResultsView(query: store.sidebarSearchQuery)

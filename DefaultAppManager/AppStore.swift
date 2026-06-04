@@ -96,7 +96,11 @@ final class AppStore: ObservableObject {
     }
 
     var hasNoSidebarSearchResults: Bool {
-        !sidebarSearchQuery.isEmpty && filteredCategories.isEmpty && filteredApps.isEmpty
+        !sidebarSearchQuery.isEmpty && !settingsMatchesSearch && filteredCategories.isEmpty && filteredApps.isEmpty
+    }
+
+    var shouldShowSettingsInSidebar: Bool {
+        sidebarSearchQuery.isEmpty || settingsMatchesSearch
     }
 
     var filteredCategories: [FileTypeCategory] {
@@ -198,6 +202,24 @@ final class AppStore: ObservableObject {
 
     private var normalizedSearch: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private var settingsMatchesSearch: Bool {
+        let query = normalizedSearch
+        guard !query.isEmpty else {
+            return true
+        }
+
+        let settingsSearchText = [
+            "settings",
+            "preferences",
+            "menu bar",
+            "login",
+            "open on login",
+            "gear"
+        ].joined(separator: " ")
+
+        return settingsSearchText.contains(query)
     }
 
     private static func boolPreference(forKey key: String, defaultValue: Bool) -> Bool {
