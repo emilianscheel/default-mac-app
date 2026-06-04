@@ -10,9 +10,14 @@ A native SwiftUI macOS menu bar app for changing the current user's Finder/open 
 
 <img src="./assets/screenshot-2.png" alt="Default Mac App Screenshot 2" width="100%">
 
-## Build and Run
+## Build and Restart
 
 ```sh
-xcodebuild -project DefaultAppManager.xcodeproj -scheme DefaultAppManager -configuration Debug -derivedDataPath .build/DerivedData build
-open ".build/DerivedData/Build/Products/Debug/Default Mac App.app"
+./build-and-restart.sh
+```
+
+## Build for Release
+
+```sh
+./build-for-release.sh
 ```
