@@ -2,7 +2,7 @@
 
 # Default Mac App
 
-A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for curated file types.
+A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for every file type.
 
 [Download](https://github.com/emilianscheel/default-mac-app/releases/latest/download/Default-Mac-App.dmg)
 
