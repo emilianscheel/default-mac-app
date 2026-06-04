@@ -7,7 +7,11 @@ final class AppStore: ObservableObject {
     @Published var apps: [InstalledApp] = []
     @Published var currentHandlers: [String: String] = [:]
     @Published var selection: SidebarSelection?
-    @Published var searchText = ""
+    @Published var searchText = "" {
+        didSet {
+            selectTopSidebarSearchResultIfNeeded()
+        }
+    }
     @Published var errorMessage: String?
     @Published var selectedAppFileTypeID: String?
     @Published var showInMenuBar: Bool {
@@ -272,6 +276,10 @@ final class AppStore: ObservableObject {
     }
 
     private func reconcileSelection() {
+        if selectTopSidebarSearchResultIfNeeded() {
+            return
+        }
+
         switch selection {
         case .settings:
             break
@@ -287,5 +295,24 @@ final class AppStore: ObservableObject {
         case nil:
             selection = .category(categories[0].id)
         }
+    }
+
+    @discardableResult
+    private func selectTopSidebarSearchResultIfNeeded() -> Bool {
+        guard !sidebarSearchQuery.isEmpty else {
+            return false
+        }
+
+        if shouldShowSettingsInSidebar {
+            selection = .settings
+        } else if let category = filteredCategories.first {
+            selection = .category(category.id)
+        } else if let app = filteredApps.first {
+            selection = .app(app.bundleIdentifier)
+        } else {
+            selection = nil
+        }
+
+        return true
     }
 }

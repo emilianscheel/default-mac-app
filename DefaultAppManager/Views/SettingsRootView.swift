@@ -41,25 +41,29 @@ struct SidebarView: View {
                             .tag(SidebarSelection.settings)
                     }
 
-                    Section("File Types") {
-                        ForEach(store.filteredCategories) { category in
-                            SidebarResultRow(
-                                title: category.name,
-                                subtitle: resultSubtitle(count: store.sidebarResultCount(for: category)),
-                                systemImage: category.systemImage
-                            )
-                                .tag(SidebarSelection.category(category.id))
+                    if !store.filteredCategories.isEmpty {
+                        Section("File Types") {
+                            ForEach(store.filteredCategories) { category in
+                                SidebarResultRow(
+                                    title: category.name,
+                                    subtitle: resultSubtitle(count: store.sidebarResultCount(for: category)),
+                                    systemImage: category.systemImage
+                                )
+                                    .tag(SidebarSelection.category(category.id))
+                            }
                         }
                     }
 
-                    Section("Applications") {
-                        ForEach(store.filteredApps) { app in
-                            SidebarResultRow(
-                                title: app.name,
-                                subtitle: resultSubtitle(count: store.sidebarResultCount(for: app)),
-                                nsImage: app.icon
-                            )
-                            .tag(SidebarSelection.app(app.bundleIdentifier))
+                    if !store.filteredApps.isEmpty {
+                        Section("Applications") {
+                            ForEach(store.filteredApps) { app in
+                                SidebarResultRow(
+                                    title: app.name,
+                                    subtitle: resultSubtitle(count: store.sidebarResultCount(for: app)),
+                                    nsImage: app.icon
+                                )
+                                .tag(SidebarSelection.app(app.bundleIdentifier))
+                            }
                         }
                     }
                 }
