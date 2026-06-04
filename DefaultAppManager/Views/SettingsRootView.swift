@@ -31,37 +31,39 @@ struct SidebarView: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        List(selection: $store.selection) {
-            if store.shouldShowSettingsInSidebar {
-                Label("Settings", systemImage: "gearshape")
-                    .tag(SidebarSelection.settings)
-            }
-
+        Group {
             if store.hasNoSidebarSearchResults {
                 SidebarNoResultsView(query: store.sidebarSearchQuery)
             } else {
-                Section("File Types") {
-                    ForEach(store.filteredCategories) { category in
-                        Label(category.name, systemImage: category.systemImage)
-                            .tag(SidebarSelection.category(category.id))
+                List(selection: $store.selection) {
+                    if store.shouldShowSettingsInSidebar {
+                        Label("Settings", systemImage: "gearshape")
+                            .tag(SidebarSelection.settings)
                     }
-                }
 
-                Section("Applications") {
-                    ForEach(store.filteredApps) { app in
-                        HStack(spacing: 8) {
-                            Image(nsImage: app.icon)
-                                .resizable()
-                                .frame(width: 18, height: 18)
-                            Text(app.name)
-                                .lineLimit(1)
+                    Section("File Types") {
+                        ForEach(store.filteredCategories) { category in
+                            Label(category.name, systemImage: category.systemImage)
+                                .tag(SidebarSelection.category(category.id))
                         }
-                        .tag(SidebarSelection.app(app.bundleIdentifier))
+                    }
+
+                    Section("Applications") {
+                        ForEach(store.filteredApps) { app in
+                            HStack(spacing: 8) {
+                                Image(nsImage: app.icon)
+                                    .resizable()
+                                    .frame(width: 18, height: 18)
+                                Text(app.name)
+                                    .lineLimit(1)
+                            }
+                            .tag(SidebarSelection.app(app.bundleIdentifier))
+                        }
                     }
                 }
+                .listStyle(.sidebar)
             }
         }
-        .listStyle(.sidebar)
         .searchable(text: $store.searchText, placement: .sidebar, prompt: "Search")
     }
 }
