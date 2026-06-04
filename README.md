@@ -1,6 +1,6 @@
-# [**`default-mac-app`**](https://github.com/emilianscheel/default-mac-app)
-
 <img src="./assets/header.png" alt="Default Mac App" width="100%">
+
+# Default Mac App
 
 A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for curated file types.
 
