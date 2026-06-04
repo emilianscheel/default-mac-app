@@ -1,5 +1,7 @@
 # Default Mac App
 
+![Header](header.png)
+
 A native SwiftUI macOS menu bar app for changing the current user's Finder/open default app for curated file types.
 
 ## Build and Run
