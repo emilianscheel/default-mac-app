@@ -55,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             settingsWindow.minSize = NSSize(width: 820, height: 540)
             settingsWindow.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             settingsWindow.titlebarAppearsTransparent = true
+            settingsWindow.toolbar = makeSettingsToolbar()
             settingsWindow.toolbarStyle = .unified
             settingsWindow.delegate = self
             settingsWindow.isReleasedWhenClosed = false
@@ -66,6 +67,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.setActivationPolicy(.regular)
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeSettingsToolbar() -> NSToolbar {
+        let toolbar = NSToolbar(identifier: "SettingsWindowToolbar")
+        toolbar.allowsUserCustomization = false
+        toolbar.autosavesConfiguration = false
+        toolbar.displayMode = .iconOnly
+        toolbar.sizeMode = .regular
+        toolbar.showsBaselineSeparator = false
+        return toolbar
     }
 
     func windowWillClose(_ notification: Notification) {
