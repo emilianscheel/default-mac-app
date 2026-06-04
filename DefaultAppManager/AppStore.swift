@@ -116,10 +116,7 @@ final class AppStore: ObservableObject {
         guard !query.isEmpty else {
             return categories
         }
-        return categories.filter { category in
-            sidebarResultCount(for: category) > 0
-                && (category.searchText.contains(query) || appSearchMatchesCategory(category, query: query))
-        }
+        return categories.filter { $0.searchText.contains(query) || appSearchMatchesCategory($0, query: query) }
     }
 
     var filteredApps: [InstalledApp] {
@@ -127,9 +124,7 @@ final class AppStore: ObservableObject {
         guard !query.isEmpty else {
             return apps
         }
-        return apps.filter { app in
-            sidebarResultCount(for: app) > 0 && app.searchText.contains(query)
-        }
+        return apps.filter { $0.searchText.contains(query) }
     }
 
     func category(for id: String) -> FileTypeCategory? {
@@ -201,11 +196,19 @@ final class AppStore: ObservableObject {
     }
 
     func sidebarResultCount(for category: FileTypeCategory) -> Int {
-        filteredFileTypes(in: category).count
+        let fileTypeCount = filteredFileTypes(in: category).count
+        guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
+            return fileTypeCount
+        }
+        return category.categorySearchText.contains(normalizedSearch) || appSearchMatchesCategory(category, query: normalizedSearch) ? 1 : 0
     }
 
     func sidebarResultCount(for app: InstalledApp) -> Int {
-        filteredAssignedFileTypes(for: app).count
+        let fileTypeCount = filteredAssignedFileTypes(for: app).count
+        guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
+            return fileTypeCount
+        }
+        return app.searchText.contains(normalizedSearch) ? 1 : 0
     }
 
     func canRestorePreviousDefault(for fileType: FileType) -> Bool {

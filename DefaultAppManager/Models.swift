@@ -15,8 +15,12 @@ struct FileTypeCategory: Identifiable, Hashable {
     let keywords: [String]
     let fileTypes: [FileType]
 
+    var categorySearchText: String {
+        ([name] + keywords).joined(separator: " ").lowercased()
+    }
+
     var searchText: String {
-        ([name] + keywords + fileTypes.flatMap(\.searchTerms)).joined(separator: " ").lowercased()
+        (categorySearchText + " " + fileTypes.flatMap(\.searchTerms).joined(separator: " ")).lowercased()
     }
 }
 
