@@ -188,15 +188,15 @@ final class AppStore: ObservableObject {
     }
 
     func filteredFileTypes(in category: FileTypeCategory) -> [FileType] {
-        filterFileTypes(category.fileTypes)
+        filterFileTypesForDisplay(category.fileTypes)
     }
 
     func filteredAssignedFileTypes(for app: InstalledApp) -> [FileType] {
-        filterFileTypes(assignedFileTypes(for: app))
+        filterFileTypesForDisplay(assignedFileTypes(for: app))
     }
 
     func sidebarResultCount(for category: FileTypeCategory) -> Int {
-        let fileTypeCount = filteredFileTypes(in: category).count
+        let fileTypeCount = matchingFileTypes(category.fileTypes).count
         guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
             return fileTypeCount
         }
@@ -204,7 +204,7 @@ final class AppStore: ObservableObject {
     }
 
     func sidebarResultCount(for app: InstalledApp) -> Int {
-        let fileTypeCount = filteredAssignedFileTypes(for: app).count
+        let fileTypeCount = matchingFileTypes(assignedFileTypes(for: app)).count
         guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
             return fileTypeCount
         }
@@ -236,7 +236,15 @@ final class AppStore: ObservableObject {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    private func filterFileTypes(_ fileTypes: [FileType]) -> [FileType] {
+    private func filterFileTypesForDisplay(_ fileTypes: [FileType]) -> [FileType] {
+        let matches = matchingFileTypes(fileTypes)
+        guard !matches.isEmpty || normalizedSearch.isEmpty else {
+            return fileTypes
+        }
+        return matches
+    }
+
+    private func matchingFileTypes(_ fileTypes: [FileType]) -> [FileType] {
         let query = normalizedSearch
         guard !query.isEmpty else {
             return fileTypes
