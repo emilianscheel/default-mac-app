@@ -41,28 +41,28 @@ struct SidebarView: View {
                             .tag(SidebarSelection.settings)
                     }
 
-                    if !store.filteredCategories.isEmpty {
+                    if !store.sidebarCategoryResults.isEmpty {
                         Section("File Types") {
-                            ForEach(store.filteredCategories) { category in
+                            ForEach(store.sidebarCategoryResults) { result in
                                 SidebarResultRow(
-                                    title: category.name,
-                                    subtitle: resultSubtitle(count: store.sidebarResultCount(for: category)),
-                                    systemImage: category.systemImage
+                                    title: result.category.name,
+                                    subtitle: resultSubtitle(count: result.resultCount),
+                                    systemImage: result.category.systemImage
                                 )
-                                    .tag(SidebarSelection.category(category.id))
+                                    .tag(SidebarSelection.category(result.category.id))
                             }
                         }
                     }
 
-                    if !store.filteredApps.isEmpty {
+                    if !store.sidebarAppResults.isEmpty {
                         Section("Applications") {
-                            ForEach(store.filteredApps) { app in
+                            ForEach(store.sidebarAppResults) { result in
                                 SidebarResultRow(
-                                    title: app.name,
-                                    subtitle: resultSubtitle(count: store.sidebarResultCount(for: app)),
-                                    nsImage: app.icon
+                                    title: result.app.name,
+                                    subtitle: resultSubtitle(count: result.resultCount),
+                                    nsImage: result.app.icon
                                 )
-                                .tag(SidebarSelection.app(app.bundleIdentifier))
+                                .tag(SidebarSelection.app(result.app.bundleIdentifier))
                             }
                         }
                     }

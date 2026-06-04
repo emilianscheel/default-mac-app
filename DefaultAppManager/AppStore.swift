@@ -1,11 +1,51 @@
 import Foundation
 import SwiftUI
 
+struct SidebarCategoryResult: Identifiable {
+    let category: FileTypeCategory
+    let resultCount: Int
+
+    var id: String {
+        category.id
+    }
+}
+
+struct SidebarAppResult: Identifiable {
+    let app: InstalledApp
+    let resultCount: Int
+
+    var id: String {
+        app.bundleIdentifier
+    }
+}
+
+private struct SearchSnapshot {
+    let query: String
+    let revision: Int
+    let settingsMatchesSearch: Bool
+    let categoryResults: [SidebarCategoryResult]
+    let appResults: [SidebarAppResult]
+    let categoryDisplayFileTypes: [String: [FileType]]
+    let appDisplayFileTypes: [String: [FileType]]
+}
+
 @MainActor
 final class AppStore: ObservableObject {
-    @Published var categories = FileTypeCatalog.categories
-    @Published var apps: [InstalledApp] = []
-    @Published var currentHandlers: [String: String] = [:]
+    @Published var categories = FileTypeCatalog.categories {
+        didSet {
+            invalidateSearchCache()
+        }
+    }
+    @Published var apps: [InstalledApp] = [] {
+        didSet {
+            invalidateSearchCache()
+        }
+    }
+    @Published var currentHandlers: [String: String] = [:] {
+        didSet {
+            invalidateSearchCache()
+        }
+    }
     @Published var selection: SidebarSelection?
     @Published var searchText = "" {
         didSet {
@@ -31,6 +71,8 @@ final class AppStore: ObservableObject {
     private lazy var discovery = AppDiscoveryService(launchServices: launchServices)
     private let previousDefaultsKey = "PreviousDefaultHandlers"
     private var refreshTask: Task<Void, Never>?
+    private var searchRevision = 0
+    private var cachedSearchSnapshot: SearchSnapshot?
     private var previousDefaults: [String: String] {
         get { UserDefaults.standard.dictionary(forKey: previousDefaultsKey) as? [String: String] ?? [:] }
         set { UserDefaults.standard.set(newValue, forKey: previousDefaultsKey) }
@@ -104,27 +146,28 @@ final class AppStore: ObservableObject {
     }
 
     var hasNoSidebarSearchResults: Bool {
-        !sidebarSearchQuery.isEmpty && !settingsMatchesSearch && filteredCategories.isEmpty && filteredApps.isEmpty
+        let snapshot = searchSnapshot
+        return !snapshot.query.isEmpty && !snapshot.settingsMatchesSearch && snapshot.categoryResults.isEmpty && snapshot.appResults.isEmpty
     }
 
     var shouldShowSettingsInSidebar: Bool {
-        sidebarSearchQuery.isEmpty || settingsMatchesSearch
+        searchSnapshot.query.isEmpty || searchSnapshot.settingsMatchesSearch
+    }
+
+    var sidebarCategoryResults: [SidebarCategoryResult] {
+        searchSnapshot.categoryResults
+    }
+
+    var sidebarAppResults: [SidebarAppResult] {
+        searchSnapshot.appResults
     }
 
     var filteredCategories: [FileTypeCategory] {
-        let query = normalizedSearch
-        guard !query.isEmpty else {
-            return categories
-        }
-        return categories.filter { $0.searchText.contains(query) || appSearchMatchesCategory($0, query: query) }
+        sidebarCategoryResults.map(\.category)
     }
 
     var filteredApps: [InstalledApp] {
-        let query = normalizedSearch
-        guard !query.isEmpty else {
-            return apps
-        }
-        return apps.filter { $0.searchText.contains(query) }
+        sidebarAppResults.map(\.app)
     }
 
     func category(for id: String) -> FileTypeCategory? {
@@ -188,27 +231,19 @@ final class AppStore: ObservableObject {
     }
 
     func filteredFileTypes(in category: FileTypeCategory) -> [FileType] {
-        filterFileTypesForDisplay(category.fileTypes)
+        searchSnapshot.categoryDisplayFileTypes[category.id] ?? category.fileTypes
     }
 
     func filteredAssignedFileTypes(for app: InstalledApp) -> [FileType] {
-        filterFileTypesForDisplay(assignedFileTypes(for: app))
+        searchSnapshot.appDisplayFileTypes[app.bundleIdentifier] ?? assignedFileTypes(for: app)
     }
 
     func sidebarResultCount(for category: FileTypeCategory) -> Int {
-        let fileTypeCount = matchingFileTypes(category.fileTypes).count
-        guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
-            return fileTypeCount
-        }
-        return category.categorySearchText.contains(normalizedSearch) || appSearchMatchesCategory(category, query: normalizedSearch) ? 1 : 0
+        sidebarCategoryResults.first { $0.category.id == category.id }?.resultCount ?? 0
     }
 
     func sidebarResultCount(for app: InstalledApp) -> Int {
-        let fileTypeCount = matchingFileTypes(assignedFileTypes(for: app)).count
-        guard fileTypeCount == 0, !normalizedSearch.isEmpty else {
-            return fileTypeCount
-        }
-        return app.searchText.contains(normalizedSearch) ? 1 : 0
+        sidebarAppResults.first { $0.app.bundleIdentifier == app.bundleIdentifier }?.resultCount ?? 0
     }
 
     func canRestorePreviousDefault(for fileType: FileType) -> Bool {
@@ -236,28 +271,86 @@ final class AppStore: ObservableObject {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    private func filterFileTypesForDisplay(_ fileTypes: [FileType]) -> [FileType] {
-        let matches = matchingFileTypes(fileTypes)
-        guard !matches.isEmpty || normalizedSearch.isEmpty else {
-            return fileTypes
+    private var searchSnapshot: SearchSnapshot {
+        let query = normalizedSearch
+        if let cachedSearchSnapshot,
+           cachedSearchSnapshot.query == query,
+           cachedSearchSnapshot.revision == searchRevision {
+            return cachedSearchSnapshot
         }
-        return matches
+
+        let snapshot = makeSearchSnapshot(query: query)
+        cachedSearchSnapshot = snapshot
+        return snapshot
     }
 
-    private func matchingFileTypes(_ fileTypes: [FileType]) -> [FileType] {
-        let query = normalizedSearch
-        guard !query.isEmpty else {
-            return fileTypes
+    private func makeSearchSnapshot(query: String) -> SearchSnapshot {
+        if query.isEmpty {
+            let categoryDisplayFileTypes = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0.fileTypes) })
+            let appDisplayFileTypes = Dictionary(uniqueKeysWithValues: apps.map { ($0.bundleIdentifier, assignedFileTypes(for: $0)) })
+            return SearchSnapshot(
+                query: query,
+                revision: searchRevision,
+                settingsMatchesSearch: true,
+                categoryResults: categories.map { SidebarCategoryResult(category: $0, resultCount: $0.fileTypes.count) },
+                appResults: apps.map { SidebarAppResult(app: $0, resultCount: assignedFileTypes(for: $0).count) },
+                categoryDisplayFileTypes: categoryDisplayFileTypes,
+                appDisplayFileTypes: appDisplayFileTypes
+            )
         }
-        return fileTypes.filter { $0.searchText.contains(query) }
+
+        let settingsMatchesSearch = settingsSearchText.contains(query)
+        let matchingApps = apps.filter { $0.searchText.contains(query) }
+        let matchingAppsByBundleIdentifier = Set(matchingApps.map(\.bundleIdentifier))
+        let assignedFileTypesByApp = Dictionary(uniqueKeysWithValues: apps.map { ($0.bundleIdentifier, assignedFileTypes(for: $0)) })
+
+        var categoryResults: [SidebarCategoryResult] = []
+        var categoryDisplayFileTypes: [String: [FileType]] = [:]
+
+        for category in categories {
+            let matchingFileTypes = category.fileTypes.filter { $0.searchText.contains(query) }
+            let appSupportMatches = categoryHasAppSupportMatch(category, matchingApps: matchingApps)
+            let categoryMatches = category.searchText.contains(query) || appSupportMatches
+
+            let displayFileTypes = matchingFileTypes.isEmpty ? category.fileTypes : matchingFileTypes
+            categoryDisplayFileTypes[category.id] = displayFileTypes
+
+            guard categoryMatches else {
+                continue
+            }
+
+            let count = matchingFileTypes.isEmpty ? 1 : matchingFileTypes.count
+            categoryResults.append(SidebarCategoryResult(category: category, resultCount: count))
+        }
+
+        var appResults: [SidebarAppResult] = []
+        var appDisplayFileTypes: [String: [FileType]] = [:]
+
+        for app in apps {
+            let assignedFileTypes = assignedFileTypesByApp[app.bundleIdentifier] ?? []
+            let matchingFileTypes = assignedFileTypes.filter { $0.searchText.contains(query) }
+            appDisplayFileTypes[app.bundleIdentifier] = matchingFileTypes.isEmpty ? assignedFileTypes : matchingFileTypes
+
+            guard matchingAppsByBundleIdentifier.contains(app.bundleIdentifier) else {
+                continue
+            }
+
+            let count = matchingFileTypes.isEmpty ? 1 : matchingFileTypes.count
+            appResults.append(SidebarAppResult(app: app, resultCount: count))
+        }
+
+        return SearchSnapshot(
+            query: query,
+            revision: searchRevision,
+            settingsMatchesSearch: settingsMatchesSearch,
+            categoryResults: categoryResults,
+            appResults: appResults,
+            categoryDisplayFileTypes: categoryDisplayFileTypes,
+            appDisplayFileTypes: appDisplayFileTypes
+        )
     }
 
-    private var settingsMatchesSearch: Bool {
-        let query = normalizedSearch
-        guard !query.isEmpty else {
-            return true
-        }
-
+    private var settingsSearchText: String {
         let settingsSearchText = [
             "settings",
             "preferences",
@@ -267,7 +360,7 @@ final class AppStore: ObservableObject {
             "gear"
         ].joined(separator: " ")
 
-        return settingsSearchText.contains(query)
+        return settingsSearchText
     }
 
     private static func boolPreference(forKey key: String, defaultValue: Bool) -> Bool {
@@ -277,13 +370,18 @@ final class AppStore: ObservableObject {
         return UserDefaults.standard.bool(forKey: key)
     }
 
-    private func appSearchMatchesCategory(_ category: FileTypeCategory, query: String) -> Bool {
-        return apps.contains { app in
-            app.searchText.contains(query) && category.fileTypes.contains { fileType in
+    private func categoryHasAppSupportMatch(_ category: FileTypeCategory, matchingApps: [InstalledApp]) -> Bool {
+        matchingApps.contains { app in
+            category.fileTypes.contains { fileType in
                 app.supportedTypeIdentifiers.contains(fileType.utiIdentifier)
                     || !app.supportedExtensions.isDisjoint(with: Set(fileType.extensions))
             }
         }
+    }
+
+    private func invalidateSearchCache() {
+        searchRevision += 1
+        cachedSearchSnapshot = nil
     }
 
     private func reconcileSelection() {
@@ -315,15 +413,22 @@ final class AppStore: ObservableObject {
         }
 
         if shouldShowSettingsInSidebar {
-            selection = .settings
+            updateSelectionIfNeeded(.settings)
         } else if let category = filteredCategories.first {
-            selection = .category(category.id)
+            updateSelectionIfNeeded(.category(category.id))
         } else if let app = filteredApps.first {
-            selection = .app(app.bundleIdentifier)
+            updateSelectionIfNeeded(.app(app.bundleIdentifier))
         } else {
-            selection = nil
+            updateSelectionIfNeeded(nil)
         }
 
         return true
+    }
+
+    private func updateSelectionIfNeeded(_ newSelection: SidebarSelection?) {
+        guard selection != newSelection else {
+            return
+        }
+        selection = newSelection
     }
 }
