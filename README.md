@@ -21,3 +21,11 @@ A native SwiftUI macOS menu bar app for changing the current user's Finder/open 
 ```sh
 ./build-for-release.sh
 ```
+
+## Versioning
+
+```sh
+./bump-version.sh --major
+./bump-version.sh --minor
+./bump-version.sh --patch
+```

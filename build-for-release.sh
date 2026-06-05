@@ -33,9 +33,10 @@ fi
 echo "Staging app bundle..."
 ditto "${APP_BUNDLE}" "${STAGED_APP}"
 
-VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${STAGED_APP}/Contents/Info.plist" 2>/dev/null || true)"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${STAGED_APP}/Contents/Info.plist")"
 if [[ -z "${VERSION}" ]]; then
-  VERSION="1.0"
+  echo "Missing CFBundleShortVersionString in staged app Info.plist" >&2
+  exit 1
 fi
 
 DMG_NAME="${PRODUCT_NAME// /-}-${VERSION}.dmg"
@@ -50,4 +51,3 @@ hdiutil create \
   "${DMG_PATH}"
 
 echo "Release DMG created: ${DMG_PATH}"
-

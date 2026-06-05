@@ -2,26 +2,35 @@ import AppKit
 import SwiftUI
 
 struct CopyableBundleIdentifierText: View {
-    let bundleIdentifier: String
+    let text: String
     let textStyle: Font.TextStyle
     let searchQuery: String
+    let helpText: String
 
     @State private var isHovering = false
     @State private var didCopy = false
 
     init(bundleIdentifier: String, textStyle: Font.TextStyle = .subheadline, searchQuery: String = "") {
-        self.bundleIdentifier = bundleIdentifier
+        self.text = bundleIdentifier
         self.textStyle = textStyle
         self.searchQuery = searchQuery
+        self.helpText = "Copy bundle identifier"
+    }
+
+    init(text: String, textStyle: Font.TextStyle = .subheadline, searchQuery: String = "", helpText: String) {
+        self.text = text
+        self.textStyle = textStyle
+        self.searchQuery = searchQuery
+        self.helpText = helpText
     }
 
     var body: some View {
         Button {
-            copyBundleIdentifier()
+            copyText()
         } label: {
             HStack(spacing: 4) {
                 SearchHighlightedText(
-                    bundleIdentifier,
+                    text,
                     query: searchQuery,
                     font: .system(textStyle, design: .monospaced),
                     foregroundStyle: .secondary
@@ -42,7 +51,7 @@ struct CopyableBundleIdentifierText: View {
         .onHover { hovering in
             isHovering = hovering
         }
-        .help("Copy bundle identifier")
+        .help(helpText)
     }
 
     private var lineHeight: CGFloat {
@@ -56,9 +65,9 @@ struct CopyableBundleIdentifierText: View {
         }
     }
 
-    private func copyBundleIdentifier() {
+    private func copyText() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(bundleIdentifier, forType: .string)
+        NSPasteboard.general.setString(text, forType: .string)
         didCopy = true
 
         Task { @MainActor in

@@ -197,6 +197,10 @@ struct SettingsDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer()
+
+            appVersion
+                .padding(.horizontal, 28)
+                .padding(.bottom, 18)
         }
         .background(Color(nsColor: .windowBackgroundColor))
     }
@@ -205,6 +209,22 @@ struct SettingsDetailView: View {
         HStack {
             Text("Settings")
                 .font(.title2.weight(.semibold))
+            Spacer()
+        }
+    }
+
+    private var appVersion: some View {
+        HStack(spacing: 4) {
+            Text("Version")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            CopyableBundleIdentifierText(
+                text: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown",
+                textStyle: .caption,
+                helpText: "Copy version"
+            )
+
             Spacer()
         }
     }
