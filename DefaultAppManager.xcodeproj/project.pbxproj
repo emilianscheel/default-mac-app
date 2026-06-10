@@ -17,6 +17,7 @@
 		100000000000000000000108 /* AppDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000208 /* AppDetailView.swift */; };
 		100000000000000000000109 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000209 /* Assets.xcassets */; };
 		10000000000000000000010A /* CopyableBundleIdentifierText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000020A /* CopyableBundleIdentifierText.swift */; };
+		10000000000000000000010B /* SearchRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000020B /* SearchRanker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		100000000000000000000208 /* AppDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailView.swift; sourceTree = "<group>"; };
 		100000000000000000000209 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		10000000000000000000020A /* CopyableBundleIdentifierText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableBundleIdentifierText.swift; sourceTree = "<group>"; };
+		10000000000000000000020B /* SearchRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRanker.swift; sourceTree = "<group>"; };
 		100000000000000000000210 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		100000000000000000000211 /* Default Mac App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Default Mac App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -58,6 +60,7 @@
 			children = (
 				100000000000000000000201 /* DefaultAppManagerApp.swift */,
 				100000000000000000000203 /* AppStore.swift */,
+				10000000000000000000020B /* SearchRanker.swift */,
 				100000000000000000000202 /* Models.swift */,
 				100000000000000000000404 /* Services */,
 				100000000000000000000405 /* Views */,
@@ -173,6 +176,7 @@
 				100000000000000000000107 /* CategoryDetailView.swift in Sources */,
 				100000000000000000000108 /* AppDetailView.swift in Sources */,
 				10000000000000000000010A /* CopyableBundleIdentifierText.swift in Sources */,
+				10000000000000000000010B /* SearchRanker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
